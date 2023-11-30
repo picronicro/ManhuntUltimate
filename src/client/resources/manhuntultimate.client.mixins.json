@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "package": "net.picro.mixin.client",
+  "compatibilityLevel": "JAVA_17",
+  "client": [
+    "ExampleClientMixin",
+    "GameMenuMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+	}
+}
