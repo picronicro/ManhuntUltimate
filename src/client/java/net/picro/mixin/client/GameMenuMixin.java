@@ -1,13 +1,15 @@
 package net.picro.mixin.client;
 
-import net.fabricmc.fabric.api.message.v1.ServerMessageEvents;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.screen.GameMenuScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.gui.widget.TextWidget;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.picro.Main;
-import net.picro.MainClient;
+import net.picro.screens.RunConfigScreen;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -22,11 +24,22 @@ public abstract class GameMenuMixin extends Screen {
 
     @Inject(at = @At("HEAD"), method = "initWidgets")
     private void addEnableMUButton(CallbackInfo ci) {
-        addDrawableChild(new ButtonWidget.Builder(Text.of(String.valueOf(Main.isManhuntActivated)), button -> {
-            button.setMessage(Text.of(String.valueOf(Main.isManhuntActivated)));
+        TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
 
-            Main.isManhuntActivated = true;
-        }).dimensions(10, 10, 40, 40).build());
+        // mode status
+        TextWidget status = new TextWidget(Text.of("Manhunt mode is " + (Main.isManhuntActivated ? Formatting.GREEN + "enabled" : Formatting.RED + "disabled")), textRenderer);
+        status.alignLeft();
+        status.setPosition(10, 10);
+        addDrawableChild(status);
+
+        // manhunt menu
+        if (Main.isManhuntActivated) {
+            if (Main.manhuntManager.getHost().getUuid() == MinecraftClient.getInstance().player.getUuid()) {
+                addDrawableChild(new ButtonWidget.Builder(Text.of("Configure run"), button -> {
+                    MinecraftClient.getInstance().setScreen(new RunConfigScreen());
+                }).dimensions(10, 24, 50, 20).build());
+            }
+        }
     }
 
 }
