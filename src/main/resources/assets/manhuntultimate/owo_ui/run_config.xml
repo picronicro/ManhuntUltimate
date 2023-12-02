@@ -1,0 +1,87 @@
+<owo-ui xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/wisp-forest/owo-lib/0.8/owo-ui.xsd">
+
+<components>
+        <flow-layout direction="vertical">
+            <children>
+                <flow-layout direction="vertical">
+                    <children>
+                        <!-- title -->
+                        <flow-layout direction="horizontal">
+                            <children>
+                                <label>
+                                    <text>Manhunt configuration</text>
+                                    <color>#000000</color>
+                                </label>
+                            </children>
+
+                            <sizing>
+                                <horizontal method="fixed">150</horizontal>
+                            </sizing>
+                            <horizontal-alignment>center</horizontal-alignment>
+                        </flow-layout>
+
+                        <!-- buttons -->
+                        <flow-layout direction="horizontal">
+                            <children>
+                                <button id="btn_add_runners">
+                                    <text>⌛</text>
+                                    <sizing>
+                                        <horizontal method="fixed">20</horizontal>
+                                    </sizing>
+                                </button>
+                                <label id="label_runners">
+                                    <text>Add runners</text>
+                                    <color>#000000</color>
+                                    <margins>
+                                        <left>4</left>
+                                    </margins>
+                                </label>
+                            </children>
+
+                            <margins>
+                                <top>6</top>
+                            </margins>
+                            <vertical-alignment>center</vertical-alignment>
+                        </flow-layout>
+
+                        <flow-layout direction="horizontal">
+                            <children>
+                                <button id="btn_add_hunters">
+                                    <text>🗡</text>
+                                    <sizing>
+                                        <horizontal method="fixed">20</horizontal>
+                                    </sizing>
+                                </button>
+                                <label id="label_hunters">
+                                    <text>Add hunters</text>
+                                    <color>#000000</color>
+                                    <margins>
+                                        <left>4</left>
+                                    </margins>
+                                </label>
+                            </children>
+
+                            <margins>
+                                <top>4</top>
+                            </margins>
+                            <vertical-alignment>center</vertical-alignment>
+                        </flow-layout>
+
+                    </children>
+
+                    <horizontal-alignment>left</horizontal-alignment>
+                    <vertical-alignment>center</vertical-alignment>
+                    <padding>
+                        <all>10</all>
+                    </padding>
+                    <surface>
+                        <panel dark="false"/>
+                    </surface>
+                </flow-layout>
+            </children>
+
+            <vertical-alignment>center</vertical-alignment>
+            <horizontal-alignment>center</horizontal-alignment>
+        </flow-layout>
+    </components>
+</owo-ui>

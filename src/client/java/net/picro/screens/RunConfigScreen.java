@@ -1,62 +1,51 @@
 package net.picro.screens;
 
-import io.wispforest.owo.ui.base.BaseOwoScreen;
+import io.netty.util.internal.StringUtil;
 import io.wispforest.owo.ui.base.BaseUIModelScreen;
 import io.wispforest.owo.ui.component.ButtonComponent;
 import io.wispforest.owo.ui.component.Components;
-import io.wispforest.owo.ui.container.Containers;
+import io.wispforest.owo.ui.component.LabelComponent;
 import io.wispforest.owo.ui.container.FlowLayout;
-import io.wispforest.owo.ui.core.*;
+import io.wispforest.owo.ui.core.Surface;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.widget.TextWidget;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.picro.Main;
-import org.jetbrains.annotations.NotNull;
-
-import java.util.ArrayList;
+import net.picro.ManhuntManager;
+import org.apache.commons.lang3.StringUtils;
 
 public class RunConfigScreen extends BaseUIModelScreen<FlowLayout> {
 
-    protected RunConfigScreen(Class<FlowLayout> rootComponentClass, DataSource source) {
-        super(rootComponentClass, DataSource.asset(new Identifier(Main.MOD_ID, "run_config")));
-    }
-
-    @Override
-    protected @NotNull OwoUIAdapter<FlowLayout> createAdapter() {
-        return OwoUIAdapter.create(this, Containers::verticalFlow);
+    public RunConfigScreen() {
+        super(FlowLayout.class, DataSource.asset(new Identifier(Main.MOD_ID, "run_config")));
     }
 
     @Override
     protected void build(FlowLayout rootComponent) {
-        // background
         rootComponent
-                .surface(Surface.blur(8, 4))
-                .horizontalAlignment(HorizontalAlignment.CENTER)
-                .verticalAlignment(VerticalAlignment.CENTER);
+                .surface(Surface.blur(8, 6));
 
-        // layout
-        ArrayList<Component> components = new ArrayList<>();
+        // DEBUG
+        rootComponent.child(Components.button(Text.literal("list"), buttonComponent -> {
+            Main.manhuntManager.listPlayers();
+        }));
 
-        var title = Components.label(Text.of("Configuration"));
-        components.add(title);
-
-        var btn = Components.button(Text.literal("lolkek"), buttonComponent -> {
-            buttonComponent.sizing(Sizing.fill(80));
+        // buttons
+        // add runners
+        rootComponent.childById(ButtonComponent.class, "btn_add_runners").onPress(buttonComponent -> {
+            MinecraftClient.getInstance().setScreen(new AddPlayersScreen(true, Main.manhuntManager.getRunners()));
         });
-        components.add(btn);
 
-        // background layout
-        rootComponent.child(
-                Containers
-                        .verticalFlow(Sizing.content(), Sizing.content())
-                        .children(components)
-                        .padding(Insets.of(10))
-                        .surface(Surface.DARK_PANEL)
-                        .verticalAlignment(VerticalAlignment.CENTER)
-                        .horizontalAlignment(HorizontalAlignment.CENTER)
+        // add hunters
+        rootComponent.childById(ButtonComponent.class, "btn_add_hunters").onPress(buttonComponent -> {
+            MinecraftClient.getInstance().setScreen(new AddPlayersScreen(false, Main.manhuntManager.getHunters()));
+        });
 
-        );
+        ManhuntManager manhuntManager = Main.manhuntManager;
+        // labels
+        // runners
+        rootComponent.childById(LabelComponent.class, "label_runners")
+                .text(Text.of(manhuntManager.getRunners().isEmpty() ? "Add runners" : StringUtils.join(manhuntManager.getRunners(), ", ")));
     }
 
 }

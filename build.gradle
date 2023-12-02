@@ -54,6 +54,10 @@ dependencies {
 	// include this if you don't want force your users to install owo
 	// sentinel will warn them and give the option to download it automatically
 	include "io.wispforest:owo-sentinel:${project.owo_version}"
+
+	// apache commons
+	// https://mvnrepository.com/artifact/org.apache.commons/commons-lang3
+	implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.0'
 }
 
 processResources {
