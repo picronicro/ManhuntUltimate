@@ -1,6 +1,5 @@
 package net.picro.screens;
 
-import io.netty.util.internal.StringUtil;
 import io.wispforest.owo.ui.base.BaseUIModelScreen;
 import io.wispforest.owo.ui.component.ButtonComponent;
 import io.wispforest.owo.ui.component.Components;
@@ -12,7 +11,8 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.picro.Main;
 import net.picro.ManhuntManager;
-import org.apache.commons.lang3.StringUtils;
+
+import java.util.stream.Collectors;
 
 public class RunConfigScreen extends BaseUIModelScreen<FlowLayout> {
 
@@ -45,7 +45,17 @@ public class RunConfigScreen extends BaseUIModelScreen<FlowLayout> {
         // labels
         // runners
         rootComponent.childById(LabelComponent.class, "label_runners")
-                .text(Text.of(manhuntManager.getRunners().isEmpty() ? "Add runners" : StringUtils.join(manhuntManager.getRunners(), ", ")));
+                .text(Text.of(manhuntManager.getRunners().isEmpty() ? "Add runners" :
+                        manhuntManager.getRunners().stream()
+                                .map(runner -> String.valueOf(runner.getName().getString()))
+                                .collect(Collectors.joining(", "))));
+
+        // hunters
+        rootComponent.childById(LabelComponent.class, "label_hunters")
+                .text(Text.of(manhuntManager.getHunters().isEmpty() ? "Add hunters" :
+                        manhuntManager.getHunters().stream()
+                                .map(hunter -> String.valueOf(hunter.getName().getString()))
+                                .collect(Collectors.joining(", "))));
     }
 
 }

@@ -50,40 +50,68 @@ public class AddPlayersScreen extends BaseOwoScreen<FlowLayout> {
         // add button
         ButtonComponent btn_add = Components.button(Text.literal("Add " + (areRunners ? "runners" : "hunters")), buttonComponent -> {
             // add players to the manhuntManager
-            if (areRunners) {
-                Main.manhuntManager.setRunners(players);
-            } else {
-                Main.manhuntManager.setHunters(players);
-            }
+            if (areRunners) Main.manhuntManager.setRunners(players);
+            else Main.manhuntManager.setHunters(players);
 
             assert MinecraftClient.getInstance().player != null;
             MinecraftClient.getInstance().player.playSound(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, 1F, 1F);
             MinecraftClient.getInstance().setScreen(new RunConfigScreen());
         });
-        btn_add.active(!players.isEmpty()).margins(Insets.top(4));
+        btn_add.active(!players.isEmpty());
+
+        // clear button
+        ButtonComponent btn_clear = Components.button(Text.literal("⏻"), buttonComponent -> {
+            if (areRunners) Main.manhuntManager.setRunners(new HashSet<>());
+            else Main.manhuntManager.setHunters(new HashSet<>());
+
+            assert MinecraftClient.getInstance().player != null;
+            MinecraftClient.getInstance().player.playSound(SoundEvents.BLOCK_FIRE_EXTINGUISH, 1F, 1F);
+            MinecraftClient.getInstance().setScreen(new RunConfigScreen());
+        });
+        btn_clear.tooltip(Text.literal("Clear list"));
+        btn_clear.margins(Insets.left(4));
 
         ArrayList<Component> widgets = new ArrayList<>();
         for (ServerPlayerEntity player : PlayerLookup.all(Objects.requireNonNull(MinecraftClient.getInstance().getServer()))) {
-            var checkbox = Components.checkbox(Text.of("")).onChanged(aBoolean -> {
-                if (aBoolean) {
-                    players.add(player);
-                } else {
-                    players.remove(player);
-                }
+            // I should check that player can't be both runners and hunter
+            boolean isOpposite = false; // if player in an opposite side, don't include him
+            String message;
+            if (areRunners) {
+                message = " is hunter";
+                if (Main.manhuntManager.getHunters().contains(player)) isOpposite = true;
+            } else {
+                message = " is runner";
+                if (Main.manhuntManager.getRunners().contains(player)) isOpposite = true;
+            }
 
-                // check that list is empty
-                btn_add.active(!players.isEmpty());
-            }).checked(players.contains(player));
-            var nickname = Components.label(player.getName());
+            // add player
+            ArrayList<Component> children = new ArrayList<>();
+            if (!isOpposite) {
+                var checkbox = Components.checkbox(Text.of("")).onChanged(aBoolean -> {
+                    if (aBoolean) {
+                        players.add(player);
+                    } else {
+                        players.remove(player);
+                    }
 
-            // single container
+                    // check that list is empty
+                    btn_add.active(!players.isEmpty());
+                }).checked(players.contains(player));
+
+                var nickname = Components.label(player.getName());
+
+                children.add(checkbox);
+                children.add(nickname);
+            } else {
+                var nickname = Components.label(Text.literal(player.getName().getString() + message));
+                children.add(nickname);
+            }
+
             widgets.add(Containers
                     .horizontalFlow(Sizing.content(), Sizing.content())
-                    .child(checkbox)
-                    .child(nickname)
+                    .children(children)
                     .verticalAlignment(VerticalAlignment.CENTER)
-                    .padding(Insets.bottom(4))
-            );
+                    .padding(Insets.bottom(4)));
         }
 
         // container of single containers
@@ -100,7 +128,7 @@ public class AddPlayersScreen extends BaseOwoScreen<FlowLayout> {
                 Containers
                         .verticalFlow(Sizing.content(), Sizing.content())
                         .child(playersScrollable)
-                        .child(btn_add)
+                        .child(Containers.horizontalFlow(Sizing.content(), Sizing.content()).child(btn_add).child(btn_clear).margins(Insets.top(4)))
                         .padding(Insets.of(10))
                         .surface(Surface.PANEL)
         );
