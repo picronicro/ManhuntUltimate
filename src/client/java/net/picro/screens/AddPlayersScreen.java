@@ -3,6 +3,7 @@ package net.picro.screens;
 import io.wispforest.owo.ui.base.BaseOwoScreen;
 import io.wispforest.owo.ui.component.ButtonComponent;
 import io.wispforest.owo.ui.component.Components;
+import io.wispforest.owo.ui.component.DropdownComponent;
 import io.wispforest.owo.ui.container.Containers;
 import io.wispforest.owo.ui.container.FlowLayout;
 import io.wispforest.owo.ui.container.ScrollContainer;
@@ -21,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.Flow;
 
 public class AddPlayersScreen extends BaseOwoScreen<FlowLayout> {
 
@@ -73,6 +75,7 @@ public class AddPlayersScreen extends BaseOwoScreen<FlowLayout> {
 
         ArrayList<Component> widgets = new ArrayList<>();
         for (ServerPlayerEntity player : PlayerLookup.all(Objects.requireNonNull(MinecraftClient.getInstance().getServer()))) {
+            System.out.println(player.getPos());
             // I should check that player can't be both runners and hunter
             boolean isOpposite = false; // if player in an opposite side, don't include him
             String message;
@@ -124,14 +127,22 @@ public class AddPlayersScreen extends BaseOwoScreen<FlowLayout> {
         ScrollContainer playersScrollable = (ScrollContainer) Containers.verticalScroll(Sizing.fixed(200), Sizing.fill(60), playersContainer).surface(Surface.DARK_PANEL);
         playersScrollable.scrollbar(ScrollContainer.Scrollbar.flat(Color.WHITE));
 
-        rootComponent.child(
-                Containers
-                        .verticalFlow(Sizing.content(), Sizing.content())
-                        .child(playersScrollable)
-                        .child(Containers.horizontalFlow(Sizing.content(), Sizing.content()).child(btn_add).child(btn_clear).margins(Insets.top(4)))
-                        .padding(Insets.of(10))
-                        .surface(Surface.PANEL)
-        );
+        var base = Containers
+                .verticalFlow(Sizing.content(), Sizing.content())
+                .child(playersScrollable)
+                .child(Containers.horizontalFlow(Sizing.content(), Sizing.content()).child(btn_add).child(btn_clear).margins(Insets.top(4)))
+                .padding(Insets.of(10))
+                .surface(Surface.PANEL)
+                .id("test_asdf");
+        var test = rootComponent.child(base);
+
+        // back button (as a dropdown)
+        DropdownComponent btn_back = Components.dropdown(Sizing.content())
+                .button(Text.literal("< Back"), dropdownComponent -> {
+                    MinecraftClient.getInstance().setScreen(new RunConfigScreen());
+                });
+        btn_back.positioning(Positioning.absolute(20, 20));
+        rootComponent.child(btn_back);
     }
 
 }

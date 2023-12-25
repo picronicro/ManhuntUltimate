@@ -6,7 +6,7 @@
                 <flow-layout direction="vertical">
                     <children>
                         <!-- title -->
-                        <flow-layout direction="horizontal">
+                        <flow-layout direction="vertical">
                             <children>
                                 <label>
                                     <text>Manhunt configuration</text>
@@ -14,9 +14,9 @@
                                 </label>
                             </children>
 
-                            <sizing>
+                            <!--<sizing>
                                 <horizontal method="fixed">150</horizontal>
-                            </sizing>
+                            </sizing>-->
                             <horizontal-alignment>center</horizontal-alignment>
                         </flow-layout>
 
@@ -67,6 +67,64 @@
                             </margins>
                             <vertical-alignment>center</vertical-alignment>
                             <tooltip-text>these players are hunters</tooltip-text>
+                        </flow-layout>
+
+                        <!-- change start mode button -->
+                        <flow-layout direction="horizontal">
+                            <children>
+                                <button id="btn_start_mode">
+                                    <text>⚑</text>
+                                    <sizing>
+                                        <horizontal method="fixed">20</horizontal>
+                                    </sizing>
+                                </button>
+                                <label id="label_start_mode">
+                                    <text>Start run by </text>
+                                    <color>#000000</color>
+                                    <margins>
+                                        <left>4</left>
+                                    </margins>
+                                </label>
+                            </children>
+
+                            <margins>
+                                <top>4</top>
+                            </margins>
+                            <vertical-alignment>center</vertical-alignment>
+                        </flow-layout>
+
+                        <flow-layout direction="horizontal">
+                            <children>
+                                <text-box id="textbox_timeout">
+                                    <sizing>
+                                        <vertical method="fixed">20</vertical>
+                                        <horizontal method="fixed">30</horizontal>
+                                    </sizing>
+                                </text-box>
+                                <label>
+                                    <text>Timeout in seconds</text>
+                                    <color>#000000</color>
+                                    <margins>
+                                        <left>4</left>
+                                    </margins>
+                                </label>
+                            </children>
+                            <margins>
+                                <top>4</top>
+                            </margins>
+                            <vertical-alignment>center</vertical-alignment>
+                        </flow-layout>
+
+                        <!-- start button -->
+                        <flow-layout direction="horizontal">
+                            <children>
+                                <button id="btn_start">
+                                    <text>§a§lSTART</text>
+                                    <margins>
+                                        <top>4</top>
+                                    </margins>
+                                </button>
+                            </children>
                         </flow-layout>
 
                     </children>

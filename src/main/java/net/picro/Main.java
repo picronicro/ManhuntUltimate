@@ -1,21 +1,20 @@
 package net.picro;
 
 import net.fabricmc.api.ModInitializer;
-
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
+import net.minecraft.util.math.BlockPos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static net.minecraft.server.command.CommandManager.literal;
+import static net.picro.packets.ManhuntToggleStatusPacket.packetManhuntToggleStatus;
 
 public class Main implements ModInitializer {
 
@@ -25,9 +24,6 @@ public class Main implements ModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
 	public static boolean isManhuntActivated = false;
-
-	// packets identifier
-	public static final Identifier PACKET_ID = new Identifier(MOD_ID, "custom_packet");
 
 	// manhunt manager
 	public static ManhuntManager manhuntManager;
@@ -39,7 +35,7 @@ public class Main implements ModInitializer {
 		// on join event
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
 			System.out.println(handler.getPlayer().getName());
-			packetManhuntToggleStatus(handler.getPlayer());
+			packetManhuntToggleStatus(handler.getPlayer(), isManhuntActivated);
 		});
 
 		// activate (permanently) manhunt mode
@@ -59,19 +55,12 @@ public class Main implements ModInitializer {
 							}
 
 							for (ServerPlayerEntity player : PlayerLookup.all(context.getSource().getServer())) {
-								packetManhuntToggleStatus(player);
+								packetManhuntToggleStatus(player, isManhuntActivated);
 							}
 
 							return 1;
 						}))
 				));
-
-	}
-
-	// other methods
-	// send manhunt toggle packet
-	private void packetManhuntToggleStatus(ServerPlayerEntity player) {
-		ServerPlayNetworking.send(player, PACKET_ID, PacketByteBufs.create().writeBoolean(isManhuntActivated));
 	}
 
 }
