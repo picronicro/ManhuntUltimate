@@ -2,34 +2,39 @@ package net.picro.screens;
 
 import io.wispforest.owo.ui.base.BaseOwoScreen;
 import io.wispforest.owo.ui.component.Components;
+import io.wispforest.owo.ui.component.LabelComponent;
 import io.wispforest.owo.ui.container.Containers;
 import io.wispforest.owo.ui.container.FlowLayout;
 import io.wispforest.owo.ui.core.*;
-import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.Perspective;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ColorHelper;
-import net.minecraft.world.GameMode;
-import net.picro.Main;
+import net.picro.MainClient;
+import net.picro.ManhuntManager;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Objects;
+import java.util.Timer;
+import java.util.TimerTask;
+
+import static net.picro.packets.ClientManhuntInGamePackets.packetRespawn;
 
 public class CustomDeathScreen extends BaseOwoScreen<FlowLayout> {
 
-    private final boolean isFinal;
-
-    public CustomDeathScreen(boolean isFinal) {
-        this.isFinal = isFinal;
-    }
+    private int respawnTimeout = 7;
+    // components
+    private ParentComponent footer;
+    private ParentComponent header;
+    private LabelComponent label;
 
     @Override
     protected @NotNull OwoUIAdapter<FlowLayout> createAdapter() {
         return OwoUIAdapter.create(this, Containers::verticalFlow);
+    }
+
+    @Override
+    public boolean shouldCloseOnEsc() {
+        return false;
     }
 
     @Override
@@ -38,37 +43,83 @@ public class CustomDeathScreen extends BaseOwoScreen<FlowLayout> {
                 .horizontalAlignment(HorizontalAlignment.CENTER)
                 .verticalAlignment(VerticalAlignment.CENTER);
         base.mouseDown().subscribe((mouseX, mouseY, button) -> {
-            if (button == 0) {
-                // TODO: короче, хуйня полная. лучше отправлять пакет на сервер и там же эту залупу обрабатывать.
-                /*// respawn
-                if (player.getSpawnPointPosition() != null) { // if spawnpoint exists
-                    BlockPos pos = player.getSpawnPointPosition();
-                    player.teleport(pos.getX(), pos.getY(), pos.getZ());
-                } else { // or use world spawn
-                    BlockPos pos = player.getServerWorld().getSpawnPos();
-                    player.teleport(pos.getX(), pos.getY(), pos.getZ());
+            if (MainClient.PLAYER_ROLE == ManhuntManager.PlayerRole.HUNTER) {
+                if (button == 0 && respawnTimeout <= 0) {
+                    packetRespawn();
+                    MinecraftClient.getInstance().options.setPerspective(Perspective.FIRST_PERSON);
+                    this.close();
                 }
-                player.changeGameMode(GameMode.SURVIVAL);*/
+            } else {
+                if (button == 0 && respawnTimeout <= 5) {
+                    assert MinecraftClient.getInstance().player != null;
+                    MinecraftClient.getInstance().player.sendMessage(Text.literal("ℹ Your teammates can revive you."));
+                    MinecraftClient.getInstance().options.setPerspective(Perspective.FIRST_PERSON);
+                    this.close();
+                }
             }
             return true;
         });
 
-        var footer = Containers.horizontalFlow(Sizing.fill(), Sizing.fill(10))
-                .child(Components.label(Text.literal("Press LMB to respawn.")))
+        label = Components.label(Text.literal("Respawning in 8..."));
+        footer = Containers.horizontalFlow(Sizing.fill(), Sizing.fill(10))
+                .child(label)
                 .surface(Surface.flat(ColorHelper.Argb.getArgb(150, 0, 0, 0)));
         footer.alignment(HorizontalAlignment.CENTER, VerticalAlignment.CENTER);
         footer.positioning(Positioning.relative(0, 115));
-        footer.positioning().animate(250, Easing.LINEAR, Positioning.relative(0, 100)).forwards();
         rootComponent.child(footer);
 
-        var header = Containers.horizontalFlow(Sizing.fill(), Sizing.fill(10))
+        header = Containers.horizontalFlow(Sizing.fill(), Sizing.fill(10))
                 .surface(Surface.flat(ColorHelper.Argb.getArgb(150, 0, 0, 0)));
         header.positioning(Positioning.relative(0, -15));
-        header.positioning().animate(250, Easing.LINEAR, Positioning.relative(0, 0)).forwards();
         rootComponent.child(header);
 
+        // player perspective
         MinecraftClient.getInstance().player.setPitch(40);
         MinecraftClient.getInstance().options.setPerspective(Perspective.THIRD_PERSON_BACK);
+
+        if (MainClient.PLAYER_ROLE == ManhuntManager.PlayerRole.HUNTER) {
+            startRespawnTimeout();
+        } else {
+            spectateTransition();
+        }
+    }
+
+    // start timeout
+    private void startRespawnTimeout() {
+        // respawn timeout
+        new Timer().scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                if (respawnTimeout == 5) {
+                    footer.positioning().animate(250, Easing.LINEAR, Positioning.relative(0, 100)).forwards();
+                    header.positioning().animate(250, Easing.LINEAR, Positioning.relative(0, 0)).forwards();
+                }
+
+                if (respawnTimeout > 0) {
+                    label.text(Text.literal("Respawning in " + respawnTimeout + "..."));
+                    respawnTimeout--;
+                } else {
+                    label.text(Text.literal("Press LMB to respawn"));
+                    this.cancel();
+                }
+            }
+        }, 0, 1000);
+    }
+
+    // start spectate transition
+    private void spectateTransition() {
+        new Timer().scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                if (respawnTimeout == 5) {
+                    footer.positioning().animate(250, Easing.LINEAR, Positioning.relative(0, 100)).forwards();
+                    header.positioning().animate(250, Easing.LINEAR, Positioning.relative(0, 0)).forwards();
+                    label.text(Text.literal("Press LMB to spectate"));
+                    this.cancel();
+                }
+                respawnTimeout--;
+            }
+        }, 0, 1000);
     }
 
 }

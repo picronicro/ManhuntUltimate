@@ -15,8 +15,6 @@ public class ManhuntGamePreparationPackets {
     // timer
     public static final Identifier PACKET_TIMER_UPDATE = new Identifier(Main.MOD_ID, "timer_update");
     public static final Identifier PACKET_TIMER_END = new Identifier(Main.MOD_ID, "timer_end");
-    // game
-    public static final Identifier PACKET_GAME_END = new Identifier(Main.MOD_ID, "game_end");
 
     public static void packetAssignRoles(ServerPlayerEntity player, ManhuntManager.PlayerRole role) {
         ServerPlayNetworking.send(player, PACKET_ASSIGN_ROLES,
@@ -31,11 +29,6 @@ public class ManhuntGamePreparationPackets {
     // timer end
     public static void packetEndTimer(ServerPlayerEntity player) {
         ServerPlayNetworking.send(player, PACKET_TIMER_END, PacketByteBufs.empty());
-    }
-
-    // game end
-    public static void packetGameEnd(ServerPlayerEntity player) {
-        ServerPlayNetworking.send(player, PACKET_GAME_END, PacketByteBufs.empty());
     }
 
 }

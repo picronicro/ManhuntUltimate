@@ -9,6 +9,7 @@ import net.picro.packets.ManhuntGamePreparationPackets;
 import net.picro.packets.ManhuntInGamePackets;
 import net.picro.packets.ManhuntToggleStatusPacket;
 import net.picro.screens.CustomDeathScreen;
+import net.picro.screens.GameOverScreen;
 
 public class MainClient implements ClientModInitializer {
 
@@ -32,6 +33,7 @@ public class MainClient implements ClientModInitializer {
 				if (hud == null) {
 					hud = new CustomHud();
 				}
+				MinecraftClient.getInstance().setScreen(new GameOverScreen(ManhuntManager.PlayerRole.HUNTER));
 				hud.setManhuntMode(toggle);
 			});
 		});
@@ -62,7 +64,21 @@ public class MainClient implements ClientModInitializer {
 		ClientPlayNetworking.registerGlobalReceiver(ManhuntInGamePackets.PACKET_DEATH, (client, handler, buf, responseSender) -> {
 			boolean isFinal = buf.readBoolean();
 
-			client.execute(() -> MinecraftClient.getInstance().setScreen(new CustomDeathScreen(isFinal)));
+			// todo: если isFinal равен true, то показывать экран статов (другой пакет)
+			client.execute(() -> {
+				if (!isFinal) {
+					MinecraftClient.getInstance().setScreen(new CustomDeathScreen());
+				}
+			});
+		});
+
+		// game: game over
+		ClientPlayNetworking.registerGlobalReceiver(ManhuntInGamePackets.PACKET_GAME_END, (client, handler, buf, responseSender) -> {
+			ManhuntManager.PlayerRole winner = buf.readEnumConstant(ManhuntManager.PlayerRole.class);
+
+			client.execute(() -> {
+				MinecraftClient.getInstance().setScreen(new GameOverScreen(winner));
+			});
 		});
 
 	}
