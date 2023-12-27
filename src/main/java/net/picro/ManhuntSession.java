@@ -1,11 +1,7 @@
 package net.picro;
 
-import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
-import net.fabricmc.fabric.api.event.Event;
-import net.fabricmc.fabric.api.event.EventFactory;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.entity.ExperienceOrbEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -37,18 +33,19 @@ public class ManhuntSession {
         this.startOrigin = startOrigin;
         this.timeout = timeout;
 
+        // world spawn
         manhuntManager.getHost().getServerWorld()
                 .setSpawnPos(new BlockPos(new Vec3i((int) startOrigin.getX(), (int) startOrigin.getY(), (int) startOrigin.getZ())), 0);
 
+        // alive runners
         aliveRunners = new HashSet<>(manhuntManager.getRunners());
 
+        // basic preparation
+        preparePlayers();
         startSession(manhuntManager.getStartMode());
 
-        // events
-        regEvents();
-
-        // packets
-        regPackets();
+        // register packets
+        registerPackets();
     }
 
     private void startSession(StartModeEnum startType) {
@@ -56,6 +53,18 @@ public class ManhuntSession {
             case TIMEOUT -> timeoutModeSession();
             case PUNCH -> {
             }
+        }
+    }
+
+    // prepare players
+    private void preparePlayers() {
+        for (ServerPlayerEntity player : PlayerLookup.all(Objects.requireNonNull(manhuntManager.getHost().getServer()))) {
+            player.changeGameMode(GameMode.SURVIVAL);
+            player.setHealth(20);
+            player.getHungerManager().setFoodLevel(20);
+            player.getHungerManager().setSaturationLevel(20);
+            player.clearStatusEffects();
+            player.dismountVehicle();
         }
     }
 
@@ -107,8 +116,8 @@ public class ManhuntSession {
         }, 0, 1000);
     }
 
-    // REGISTER PACKETS
-    private void regPackets() {
+    // register packets
+    private void registerPackets() {
         // respawn packet
         ServerPlayNetworking.registerGlobalReceiver(PACKET_RESPAWN, (server, player, handler, buf, responseSender) -> {
             // respawn
@@ -125,53 +134,13 @@ public class ManhuntSession {
         });
     }
 
-    // REGISTER EVENTS
-    private void regEvents() {
-        onPlayerDeathEvent();
-    }
-    // on player kill
-    private void onPlayerDeathEvent() {
-        ServerLivingEntityEvents.ALLOW_DEATH.register((entity, damageSource, damageAmount) -> {
-            if (entity instanceof ServerPlayerEntity) {
-                if (damageAmount >= entity.getHealth()) {
-                    ServerPlayerEntity player = (ServerPlayerEntity) entity;
-                    packetDeath(player, false);
-                    player.setHealth(20);
-                    player.getHungerManager().setFoodLevel(20);
-                    player.getHungerManager().setSaturationLevel(10);
-                    player.changeGameMode(GameMode.SPECTATOR);
-
-                    // drop xp/item logic
-                    player.getInventory().dropAll();
-                    ExperienceOrbEntity.spawn(player.getServerWorld(), player.getPos(), player.getXpToDrop());
-                    player.setExperienceLevel(0);
-                    player.setExperiencePoints(0);
-                    player.setVelocity(0, 0, 0);
-                    player.clearStatusEffects();
-                    player.dismountVehicle();
-
-                    // if it was a runner
-                    if (aliveRunners.contains(player)) {
-                        aliveRunners.remove(player);
-                        areRunnersAlive(player);
-                    }
-
-                    return false;
-                } else {
-                    return true;
-                }
-            }
-            return true;
-        });
-    }
-
-    // DISPOSE
+    // dispose session
     private void dispose() {
-
+        ServerPlayNetworking.unregisterGlobalReceiver(PACKET_RESPAWN);
     }
 
     // check that runners alive
-    private void areRunnersAlive(ServerPlayerEntity lastPlayer) {
+    public void areRunnersAlive(ServerPlayerEntity lastPlayer) {
         // lastPlayer for kill-cam
         if (aliveRunners.isEmpty()) {
             // stop the game
@@ -179,8 +148,17 @@ public class ManhuntSession {
             for (ServerPlayerEntity player : PlayerLookup.all(Objects.requireNonNull(manhuntManager.getHost().getServer()))) {
                 packetGameEnd(player, ManhuntManager.PlayerRole.HUNTER);
             }
+
+            dispose();
+            manhuntManager.manhuntSession = null;
         }
 
+    }
+
+    // getters & setters
+    // get alive runners
+    public Set<ServerPlayerEntity> getAliveRunners() {
+        return aliveRunners;
     }
 
 }
