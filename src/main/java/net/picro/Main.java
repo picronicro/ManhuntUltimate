@@ -5,11 +5,13 @@ import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.minecraft.command.argument.EntityAnchorArgumentType;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,30 +47,16 @@ public class Main implements ModInitializer {
                                 {
                                     context.getSource().sendFeedback(() -> Text.literal("Called /manhunt with no arguments"), false);
 
-                                    //context.getSource().sendFeedback(() -> Text.literal(String.valueOf(calculateAngle(context.getSource().getPosition(), new Vec3d(-31, 70, 82)))), false);
+                                    // DEBUG
+                                    var playerPos = context.getSource().getPlayer().getPos(); // PLAYER
+                                    var targetPos = new Vec3d(-31, 70, 82); // TARGET
 
-                                    //System.out.println(context.getSource().getPosition().toVector3f().angle(new Vec3d(-31, 70, 82).toVector3f()));
-                                    var pos1 = context.getSource().getPlayer().getPos(); // PLAYER
-                                    var pos2 = new Vec3d(-31, 70, 82); // TARGET
+                                    double d = targetPos.x - playerPos.x;
+                                    double f = targetPos.z - playerPos.z;
+                                    //context.getSource().getPlayer().setYaw(MathHelper.wrapDegrees((float)(MathHelper.atan2(f, d) * 57.2957763671875) - 90.0F));
 
-                                    double distX = Math.abs(pos2.x - pos1.x); //correct for center of block
-                                    double distZ = Math.abs(pos2.z - pos1.z);
-
-                                    var relAngle = Math.atan2(distX, distZ) /*/ (0.5 * Math.PI) / 4*/;
-
-                                    /*double angle = 0;
-                                    if (pos2.x < pos1.x && pos2.z < pos1.z) angle = (relAngle + 0); //quadrant N - W
-                                    else if (pos2.x < pos1.x && pos2.z > pos1.z) angle = (0.25 - relAngle + 0.25f); //quadrant W - S
-                                    else if (pos2.x > pos1.x && pos2.z > pos1.z) angle = (relAngle + 0.5f); //quadrant S - E
-                                    else if (pos2.x > pos1.x && pos2.z < pos1.z) angle = (0.25 - relAngle + 0.75f); //quadrant E - N*/
-
-                                    double yaw = context.getSource().getPlayer().getYaw();
-                                    if (yaw < 0) {
-                                        yaw += 360;
-                                    }
-
-                                    System.out.println("yaw: " + yaw);
-                                    System.out.println(yaw - Math.toDegrees(relAngle));
+                                    System.out.println(context.getSource().getPlayer().getYaw());
+                                    System.out.println(MathHelper.wrapDegrees((float)(MathHelper.atan2(f, d) * 57.2957763671875) - 90.0F));
 
                                     return 1;
                                 })

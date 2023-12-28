@@ -1,10 +1,11 @@
-package net.picro;
+package net.picro.hud;
 
 import io.wispforest.owo.ui.component.Components;
 import io.wispforest.owo.ui.component.LabelComponent;
 import io.wispforest.owo.ui.container.Containers;
 import io.wispforest.owo.ui.core.*;
 import io.wispforest.owo.ui.hud.Hud;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.client.util.Window;
@@ -13,6 +14,11 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
+import net.picro.Main;
+import net.picro.MainClient;
+import net.picro.ManhuntManager;
 
 import java.util.Arrays;
 import java.util.List;
@@ -53,6 +59,43 @@ public class CustomHud {
                 .verticalAlignment(VerticalAlignment.CENTER)
                 .positioning(Positioning.relative(97, 250));
         Hud.add(new Identifier(Main.MOD_ID, "release_timeout"), () -> timerContainer);
+
+        // compass
+        CompassHud compass = new CompassHud();
+        ClientTickEvents.START_CLIENT_TICK.register(client -> {
+            // DEBUG
+            assert client.player != null;
+            var playerPos = client.player.getPos(); // PLAYER
+            var targetPos = new Vec3d(-31, 70, 82); // TARGET
+
+            double d = targetPos.x - playerPos.x;
+            double f = targetPos.z - playerPos.z;
+
+
+            assert client.player != null;
+            // yaw
+            double yaw = normalizeYaw(client.player.getYaw());
+            if (yaw < 0) {
+                yaw += 360;
+            }
+            // waypoint
+            compass.updatePos((int) MathHelper.wrapDegrees((float)(MathHelper.atan2(f, d) * 57.2957763671875) - 90.0F));
+            // yaw marker
+            compass.updateYawMarker((int) normalizeYaw(client.player.getYaw()));
+            System.out.println(yaw);
+        });
+        Hud.add(new Identifier(Main.MOD_ID, "compass"), compass::getRoot);
+    }
+
+    private float normalizeYaw(float yaw) {
+        // Ensure yaw is within the range -180 to 180
+        while (yaw < -180) {
+            yaw += 360;
+        }
+        while (yaw > 180) {
+            yaw -= 360;
+        }
+        return yaw;
     }
 
     public void setManhuntMode(boolean manhuntMode) {
