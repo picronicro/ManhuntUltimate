@@ -72,17 +72,10 @@ public class CustomHud {
             double f = targetPos.z - playerPos.z;
 
 
-            assert client.player != null;
-            // yaw
-            double yaw = normalizeYaw(client.player.getYaw());
-            if (yaw < 0) {
-                yaw += 360;
-            }
             // waypoint
             compass.updatePos((int) MathHelper.wrapDegrees((float)(MathHelper.atan2(f, d) * 57.2957763671875) - 90.0F));
             // yaw marker
-            compass.updateYawMarker((int) normalizeYaw(client.player.getYaw()));
-            System.out.println(yaw);
+            //compass.updateYawMarker((int) normalizeYaw(client.player.getYaw()));
         });
         Hud.add(new Identifier(Main.MOD_ID, "compass"), compass::getRoot);
     }
