@@ -1,8 +1,11 @@
 package net.picro;
 
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.picro.hud.CustomHud;
 import net.picro.packets.ManhuntGamePreparationPackets;
 import net.picro.packets.ManhuntInGamePackets;
@@ -23,6 +26,11 @@ public class MainClient implements ClientModInitializer {
 		// This entrypoint is suitable for setting up client-specific logic, such as rendering.
 		System.out.println("client response");
 //		HudRenderCallback.EVENT.register(hud);
+
+		// dispose hud on disconnect
+		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
+			System.out.println("CLIENT HAS BEEN DISCONNECTED");
+		});
 
 		// manhunt mode status & create hud on login
 		ClientPlayNetworking.registerGlobalReceiver(ManhuntToggleStatusPacket.PACKET_ID, (client, handler, buf, responseSender) -> {
@@ -78,6 +86,14 @@ public class MainClient implements ClientModInitializer {
 			client.execute(() -> {
 				MinecraftClient.getInstance().setScreen(new GameOverScreen(winner));
 			});
+		});
+
+		// game: runner pos
+		ClientPlayNetworking.registerGlobalReceiver(ManhuntInGamePackets.PACKET_RUNNER_POS, (client, handler, buf, responseSender) -> {
+			String name = buf.readString();
+			BlockPos pos = buf.readBlockPos();
+
+			client.execute(() -> hud.getCompass().updateRunnerPos(name, new Vec3d(pos.getX(), pos.getY(), pos.getZ())));
 		});
 
 	}

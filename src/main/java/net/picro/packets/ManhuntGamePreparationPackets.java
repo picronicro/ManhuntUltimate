@@ -24,6 +24,7 @@ public class ManhuntGamePreparationPackets {
     // timer update
     public static void packetUpdateTimer(ServerPlayerEntity player, int time) {
         ServerPlayNetworking.send(player, PACKET_TIMER_UPDATE, PacketByteBufs.create().writeInt(time));
+        ServerPlayNetworking.send(player, PACKET_TIMER_UPDATE, PacketByteBufs.create());
     }
 
     // timer end

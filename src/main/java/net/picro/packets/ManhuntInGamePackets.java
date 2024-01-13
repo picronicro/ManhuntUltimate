@@ -2,6 +2,7 @@ package net.picro.packets;
 
 import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.network.PacketByteBuf;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 import net.picro.Main;
@@ -15,6 +16,8 @@ public class ManhuntInGamePackets {
     public static final Identifier PACKET_DEATH = new Identifier(Main.MOD_ID, "game_death");
     // game
     public static final Identifier PACKET_GAME_END = new Identifier(Main.MOD_ID, "game_end");
+    // runners pos (compass)
+    public static final Identifier PACKET_RUNNER_POS = new Identifier(Main.MOD_ID, "game_runner_pos");
 
     // from CLIENT packets
     // respawn packet (CLIENT => SERVER)
@@ -30,6 +33,15 @@ public class ManhuntInGamePackets {
     // game end
     public static void packetGameEnd(ServerPlayerEntity player, ManhuntManager.PlayerRole winner) {
         ServerPlayNetworking.send(player, PACKET_GAME_END, PacketByteBufs.create().writeEnumConstant(winner));
+    }
+
+    // runner pos (playerReceiver is probably hunter) (ALSO COUNTS AS INIT COMPASS)
+    public static void packetRunnerPos(ServerPlayerEntity playerReceiver, ServerPlayerEntity runner) {
+        PacketByteBuf buf = PacketByteBufs.create();
+        buf.writeString(runner.getName().getString());
+        buf.writeBlockPos(runner.getBlockPos());
+
+        ServerPlayNetworking.send(playerReceiver, PACKET_RUNNER_POS, buf);
     }
 
 }

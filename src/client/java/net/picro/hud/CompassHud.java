@@ -6,14 +6,17 @@ import io.wispforest.owo.ui.component.LabelComponent;
 import io.wispforest.owo.ui.container.Containers;
 import io.wispforest.owo.ui.container.FlowLayout;
 import io.wispforest.owo.ui.core.*;
-import io.wispforest.owo.ui.hud.HudContainer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
 
+import java.util.HashMap;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -22,20 +25,23 @@ public class CompassHud {
     // client
     private final MinecraftClient client = MinecraftClient.getInstance();
 
+    // is showed up (triggers once)
+    private boolean isShowedUp = false;
+
     // root layout
     private final FlowLayout root;
-
     // status text
     private LabelComponent yawValue;
     private LabelComponent directionValue;
-
-    // skull marker
-    private ItemComponent marker;
+    // yaw marker
     private LabelComponent yawMarker;
+    // runners
+    private HashMap<String, ItemComponent> runnerMarkers = new HashMap<>();
+    private HashMap<String, Vec3d> runnerPositions = new HashMap<>();
 
     public CompassHud() {
         root = Containers.verticalFlow(Sizing.fill(), Sizing.fill());
-        root.positioning(Positioning.absolute(0, 0));
+        root.positioning(Positioning.absolute(0, -40));
         root.horizontalAlignment(HorizontalAlignment.CENTER);
         build();
 
@@ -43,6 +49,12 @@ public class CompassHud {
         new Timer().scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
+                // dropdown animation when runners map is not empty
+                if (!isShowedUp && !runnerMarkers.isEmpty()) {
+                    isShowedUp = true;
+                    root.positioning().animate(1500, Easing.SINE, Positioning.absolute(0, 0)).forwards();
+                }
+
                 // update yaw marker
                 updateYawMarker((int) normalizeYaw(client.player.getYaw()));
 
@@ -78,16 +90,6 @@ public class CompassHud {
         textContainer.child(yawValue);
         root.child(textContainer);
 
-        // debug
-        ItemStack skull = new ItemStack(Items.PLAYER_HEAD);
-        NbtCompound nbt = new NbtCompound();
-        nbt.putString("SkullOwner", "picronicro");
-        skull.setNbt(nbt);
-
-        marker = Components.item(skull);
-
-        root.child(marker);
-
         // yaw marker
         yawMarker = Components.label(Text.literal("▼").formatted(Formatting.RED));
         yawMarker.horizontalTextAlignment();
@@ -95,9 +97,38 @@ public class CompassHud {
         root.child(yawMarker);
     }
 
-    public void updatePos(int yaw) {
-        int width = root.width() / 2;
-        marker.positioning(Positioning.absolute((yaw / 2) + width - 8, 10));
+    // initial setup, all hunters have to get first packet with all runners
+    public void addRunner(String name) {
+        ItemStack skull = new ItemStack(Items.PLAYER_HEAD);
+        NbtCompound nbt = new NbtCompound();
+        nbt.putString("SkullOwner", name);
+        skull.setNbt(nbt);
+        var marker = Components.item(skull);
+        root.child(marker);
+
+        runnerMarkers.put(name, marker);
+    }
+
+    // if runner died
+    public void removeRunner(String name) {
+        runnerMarkers.get(name).remove();
+        runnerMarkers.remove(name);
+    }
+
+    public void updateRunnerPos(String name, Vec3d targetPos) {
+        if (runnerMarkers.containsKey(name)) {
+            // calculate yaw for runner marker
+            var playerPos = client.player.getPos(); // PLAYER
+
+            double d = targetPos.x - playerPos.x;
+            double f = targetPos.z - playerPos.z;
+
+            int yaw = (int) MathHelper.wrapDegrees((float)(MathHelper.atan2(f, d) * 57.2957763671875) - 90.0F);
+
+            // and then set its positioning
+            int width = root.width() / 2;
+            runnerMarkers.get(name).positioning(Positioning.absolute((yaw / 2) + width - 8, 10));
+        }
     }
 
     public void updateYawMarker(int yaw) {

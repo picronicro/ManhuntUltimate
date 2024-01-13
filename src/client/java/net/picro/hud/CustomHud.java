@@ -23,6 +23,7 @@ import net.picro.ManhuntManager;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 import static java.util.concurrent.CompletableFuture.*;
@@ -37,6 +38,9 @@ public class CustomHud {
     // timer text
     private Component timerContainer;
     private final LabelComponent timer = Components.label(Text.literal("akebloh"));
+
+    // compass hud
+    private CompassHud compass;
 
     public CustomHud() {
         createHud();
@@ -62,33 +66,9 @@ public class CustomHud {
 
         // compass
         CompassHud compass = new CompassHud();
-        ClientTickEvents.START_CLIENT_TICK.register(client -> {
-            // DEBUG
-            assert client.player != null;
-            var playerPos = client.player.getPos(); // PLAYER
-            var targetPos = new Vec3d(-31, 70, 82); // TARGET
-
-            double d = targetPos.x - playerPos.x;
-            double f = targetPos.z - playerPos.z;
-
-
-            // waypoint
-            compass.updatePos((int) MathHelper.wrapDegrees((float)(MathHelper.atan2(f, d) * 57.2957763671875) - 90.0F));
-            // yaw marker
-            //compass.updateYawMarker((int) normalizeYaw(client.player.getYaw()));
-        });
+        compass.addRunner("picronicro");
+        compass.updateRunnerPos("picronicro", new Vec3d(-39, 30, 52));
         Hud.add(new Identifier(Main.MOD_ID, "compass"), compass::getRoot);
-    }
-
-    private float normalizeYaw(float yaw) {
-        // Ensure yaw is within the range -180 to 180
-        while (yaw < -180) {
-            yaw += 360;
-        }
-        while (yaw > 180) {
-            yaw -= 360;
-        }
-        return yaw;
     }
 
     public void setManhuntMode(boolean manhuntMode) {
@@ -153,6 +133,12 @@ public class CustomHud {
         delayedExecutor(3, TimeUnit.SECONDS)
                 .execute(() -> Objects.requireNonNull(Hud.getComponent(new Identifier(Main.MOD_ID, "release_timeout")))
                         .positioning().animate(8000, Easing.LINEAR, Positioning.relative(97, 150)).forwards());
+    }
+
+    // misc
+    // get compass hud
+    public CompassHud getCompass() {
+        return compass;
     }
 
 }
